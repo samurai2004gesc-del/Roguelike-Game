@@ -4,6 +4,13 @@ Roguelike de acción isométrico para **Unity 6** inspirado en el combate, las m
 
 Eres **Sothis Whateley** (hijo o hija, a elegir), el tercer vástago de Lavinia Whateley y **Yog-Sothoth**, nacido en el espacio entre los espacios. Tus hermanos Wilbur y "el Otro" cruzaron al mundo de vigilia y murieron allí. Tú quieres escapar: atravesar las Tierras del Sueño, la R'lyeh hundida, la meseta de Leng y la Corte de Azathoth hasta la Última Puerta, que custodia **Nyarlathotep**. Cada vez que mueres, la Puerta te devuelve al Umbral, como la sangre de tu padre manda.
 
+| | |
+|---|---|
+| ![Menú](docs/capturas/01_menu.png) | ![Bosque Encantado](docs/capturas/20_region0_sala.png) |
+| ![Elección de boon](docs/capturas/11_eleccion_boon.png) | ![Pickman](docs/capturas/22_jefe0_intro.png) |
+| ![Dagón e Hidra](docs/capturas/23_jefe1_combate.png) | ![Sumo Sacerdote](docs/capturas/23_jefe2_combate.png) |
+| ![Nyarlathotep](docs/capturas/24_jefe3_fase.png) | ![El Umbral](docs/capturas/03_santuario.png) |
+
 ---
 
 ## Cómo abrirlo y jugar
