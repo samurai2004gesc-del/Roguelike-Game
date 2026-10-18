@@ -508,7 +508,7 @@ namespace Umbral
             if (p == 1)
             {
                 UIRoot.Instance?.ShowBossLine(this, "Ah, sobrino. ¿Te gusta este rostro? Tengo mil más.");
-                yield return ChangeForm(EnemyArt.Haunter, "El Morador de las Tinieblas");
+                yield return ChangeForm(EnemyArt.Haunter, "El Morador de las Tinieblas", "nyar_morador");
                 Game.Instance.SetDarkness(true);
                 def.move = MoveStyle.Hover; def.preferredRange = 6f;
             }
@@ -516,20 +516,20 @@ namespace Umbral
             {
                 UIRoot.Instance?.ShowBossLine(this, "BASTA DE MÁSCARAS. CONTEMPLA AL CAOS QUE REPTA.");
                 Game.Instance.SetDarkness(false);
-                yield return ChangeForm(EnemyArt.CrawlingChaos, "El Dios de las Mil Formas");
+                yield return ChangeForm(EnemyArt.CrawlingChaos, "El Dios de las Mil Formas", "nyar_caos");
                 def.move = MoveStyle.Stationary;
                 Teleport(Arena.Current != null ? Arena.Current.bounds.Center : Pos);
             }
             yield return new WaitForSeconds(0.6f);
         }
 
-        IEnumerator ChangeForm(Func<Transform, ModelRig> builder, string newTitle)
+        IEnumerator ChangeForm(Func<Transform, ModelRig> builder, string newTitle, string artId)
         {
             Fx.Smoke(transform.position + Vector3.up * 2, new Color(0.05f, 0.0f, 0.05f, 0.95f), 40, 4f);
             Fx.Burst(transform.position + Vector3.up * 2, def.accent, 40, 10f, 0.5f, 0.8f, FxKind.Star);
             yield return new WaitForSeconds(0.5f);
             if (rig != null) Destroy(rig.gameObject);
-            rig = builder(transform);
+            rig = ArtIA.SpriteRig(transform, artId, artId == "nyar_caos" ? 7f : 5f, 1.4f) ?? builder(transform);
             rig.Init();
             title = newTitle;
             Sfx.Play(SfxId.BossRoar, transform.position, 1f, 0.6f);

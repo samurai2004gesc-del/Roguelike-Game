@@ -45,7 +45,7 @@ namespace Umbral
             a.displayName = "Retoño Oscuro";
             a.SetMaxHp(1);
             a.until = Time.time + M.retonoDuration;
-            a.rig = CharacterArt.DarkYoung(go.transform, 0.55f);
+            a.rig = ArtIA.SpriteRig(go.transform, "retono", 1.4f, 0.4f) ?? CharacterArt.DarkYoung(go.transform, 0.55f);
             a.rig.Init();
             Fx.Burst(go.transform.position + Vector3.up * 0.5f, new Color(0.4f, 0.85f, 0.25f), 16, 5f, 0.3f, 0.6f);
             Sfx.Play(SfxId.Growl, go.transform.position, 0.6f, 1.4f);
@@ -113,7 +113,7 @@ namespace Umbral
             f.id = id; f.P = p;
             f.pos = p.Pos + new Vector2(-1, -1);
             go.transform.position = f.pos.X0Z();
-            f.rig = id == "fam_gato" ? CharacterArt.Cat(go.transform) : CharacterArt.Zoog(go.transform, 0.6f, true);
+            f.rig = ArtIA.SpriteRig(go.transform, id, id == "fam_gato" ? 0.7f : 0.9f, 0.3f) ?? (id == "fam_gato" ? CharacterArt.Cat(go.transform) : CharacterArt.Zoog(go.transform, 0.6f, true));
             f.rig.Init();
             return f;
         }

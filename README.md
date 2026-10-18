@@ -23,6 +23,8 @@ Eres **Sothis Whateley** (hijo o hija, a elegir), el tercer vástago de Lavinia 
 
 No hace falta ningún asset externo: **todo el arte, las animaciones, los retratos, los efectos, el sonido y la música se generan por código**.
 
+**Arte pintado opcional:** puedes sustituir retratos, personajes, iconos, fondos y suelos por ilustraciones hechas con Nano Banana Pro (u otra herramienta). Solo hay que guardar las imágenes con el nombre correcto en `Assets/Umbral/Resources/ArtIA/`: el juego quita el fondo y las usa solo. Prompts y nombres en [docs/ARTE_IA.md](docs/ARTE_IA.md).
+
 ### Controles
 
 | Acción | Teclado y ratón | Mando |

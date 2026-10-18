@@ -71,6 +71,12 @@ namespace Umbral
                     Refresh(OpenWeaponAltar);
                     if (s.HasRitual("r_aspectos")) OpenAspects(w);
                 }, !unlocked, 26, 18);
+                var wsp = ArtIA.Sprite(ArtIA.Iconos, w.id);
+                if (wsp != null)
+                {
+                    var icr = UIKit.Box(b.transform, "IconoArma", new Vector2(1, 1), new Vector2(-12, -10), new Vector2(84, 84), new Vector2(1, 1));
+                    var wi = UIKit.Img(icr, unlocked ? Color.white : new Color(0.3f, 0.3f, 0.35f)); wi.sprite = wsp; wi.preserveAspect = true;
+                }
                 sels.Add(b);
             }
             if (s.HasRitual("r_aspectos"))

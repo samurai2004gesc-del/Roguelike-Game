@@ -210,7 +210,7 @@ namespace Umbral
             go.transform.position = at.X0Z();
             Vector2 look = (lookAt - at).sqrMagnitude > 0.1f ? (lookAt - at) : -up;
             go.transform.rotation = U.LookFlat(look);
-            var rig = CharacterArt.Npc(go.transform, id);
+            var rig = CharacterArt.NpcOrArt(go.transform, id);
             var npc = go.AddComponent<HubNpc>();
             npc.id = id;
             var sp = Dialogue.Sp(id);

@@ -93,7 +93,8 @@ namespace Umbral
             model.transform.SetParent(World.Root, false);
             model.transform.position = (right * 5f).X0Z();
             model.transform.rotation = U.LookFlat(-right.Rotate(-30));
-            CharacterArt.Protagonist(model.transform, Save.Data.female);
+            var mrig = ArtIA.SpriteRig(model.transform, Save.Data.female ? "sothis_f" : "sothis_m", 1.9f, 0.55f);
+            if (mrig != null) CharacterArt.AddGlobes(mrig); else CharacterArt.Protagonist(model.transform, Save.Data.female);
             for (int i = 0; i < 7; i++)
             {
                 var g = Kit.Glow(World.Root, Color.HSVToRGB(i / 7f, 0.5f, 1f), Random.Range(0.6f, 2f), (right * 5f + Random.insideUnitCircle * 9f).X0Z(Random.Range(1f, 6f)), 2.2f);
@@ -202,7 +203,7 @@ namespace Umbral
             var first = new RoomPlan { kind = RoomKind.Combat, reward = RewardType.Boon, god = BoonManager.PickGod(run.rng) };
             run.room = 0;
             yield return EnterRoomCo(first, false, true);
-            UIRoot.Instance.Banner(Biomes.Get(0).name, Biomes.Get(0).subtitle, new Color(0.6f, 1f, 0.7f), 3f);
+            UIRoot.Instance.RegionIntro(Biomes.Get(0));
             if (run.pendingStartBoon)
             {
                 run.pendingStartBoon = false;
@@ -258,7 +259,7 @@ namespace Umbral
             p.HealScaled(p.maxHp * 0.25f);
             var first = new RoomPlan { kind = RoomKind.Combat, reward = RewardType.Boon, god = BoonManager.PickGod(run.rng, run.lastGodOffered) };
             yield return EnterRoomCo(first, false, true);
-            UIRoot.Instance.Banner(b.name, b.subtitle, b.veins, 3.5f);
+            UIRoot.Instance.RegionIntro(b);
         }
 
         public void ShowRoomTitle(RoomPlan plan, RunState run)

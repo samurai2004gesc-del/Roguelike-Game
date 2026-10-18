@@ -54,7 +54,7 @@ namespace Umbral
             if (run != null && maxArmor <= 0 && run.vowArmorChance > 0 && run.rng.Chance(run.vowArmorChance)) maxArmor = Mathf.Round(maxHp * 0.4f);
             armor = maxArmor;
             damageMult = elite ? 1.25f : 1f;
-            rig = d.model != null ? d.model(transform) : CharacterArt.Zoog(transform, 1f);
+            rig = ArtIA.SpriteRig(transform, d.id == "boss_wilbur" ? "wilbur" : d.id, d.height, d.radius) ?? (d.model != null ? d.model(transform) : CharacterArt.Zoog(transform, 1f));
             if (elite) rig.transform.localScale *= 1.25f;
             rig.speedRef = d.speed;
             rig.Init();

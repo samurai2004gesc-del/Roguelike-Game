@@ -57,7 +57,9 @@ namespace Umbral
             p.height = 1.9f;
             p.female = female;
             Instance = p;
-            p.rig = CharacterArt.Protagonist(go.transform, female);
+            p.rig = ArtIA.SpriteRig(go.transform, female ? "sothis_f" : "sothis_m", 1.9f, 0.55f);
+            if (p.rig != null) CharacterArt.AddGlobes(p.rig);
+            else p.rig = CharacterArt.Protagonist(go.transform, female);
             p.cast = go.AddComponent<CastController>(); p.cast.P = p;
             p.hex = go.AddComponent<HexController>(); p.hex.P = p;
             p.SetWeapon(weaponId);

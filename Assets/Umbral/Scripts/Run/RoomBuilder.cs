@@ -195,10 +195,16 @@ namespace Umbral
         /// <summary>Losa del suelo con textura pintada y venas brillantes.</summary>
         public static void BuildFloor(BiomeDef b, Arena arena, int seed)
         {
-            var tex = Tex.Floor(b.id, b.floorA, b.floorB, b.crack, 4f, seed % 3 + b.id.Length * 7, b.organicFloor);
-            var veins = Tex.RuneVeins(b.id, b.id.Length * 13, 0.45f);
-            var mat = Mats.ToonTextured("floor_" + b.id, tex, Color.white, new Vector2(1, 1), veins, b.veins * 0.9f);
-            var mesh = MeshGen.FloatingSlab(arena.polygon, 7f, 1f / 7f, seed);
+            var painted = ArtIA.Tex(ArtIA.Suelos, b.id);
+            Material mat;
+            if (painted != null) mat = Mats.ToonTextured("floorIA_" + b.id, painted, Color.white, new Vector2(1, 1));
+            else
+            {
+                var tex = Tex.Floor(b.id, b.floorA, b.floorB, b.crack, 4f, seed % 3 + b.id.Length * 7, b.organicFloor);
+                var veins = Tex.RuneVeins(b.id, b.id.Length * 13, 0.45f);
+                mat = Mats.ToonTextured("floor_" + b.id, tex, Color.white, new Vector2(1, 1), veins, b.veins * 0.9f);
+            }
+            var mesh = MeshGen.FloatingSlab(arena.polygon, 7f, painted != null ? 1f / 9f : 1f / 7f, seed);
             var go = new GameObject("Suelo");
             go.transform.SetParent(World.Root, false);
             go.AddComponent<MeshFilter>().sharedMesh = mesh;

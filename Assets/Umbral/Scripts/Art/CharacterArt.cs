@@ -89,6 +89,22 @@ namespace Umbral
             return rig;
         }
 
+        /// <summary>Las tres esferas iridiscentes que orbitan a Sothis (también con arte pintado).</summary>
+        public static void AddGlobes(ModelRig rig)
+        {
+            var irid = new Color(0.45f, 0.95f, 1f);
+            for (int i = 0; i < 3; i++) rig.orbiters.Add(Kit.Part(rig.transform, MeshGen.Sphere, Glow(i == 0 ? irid : i == 1 ? new Color(1f, 0.5f, 0.95f) : new Color(1f, 0.9f, 0.5f), 2.8f), Vector3.zero, Vector3.one * 0.16f, default, "globe", false));
+            rig.orbitRadius = 0.85f; rig.orbitHeight = 1.4f; rig.orbitSpeed = 60f;
+            rig.Init();
+        }
+
+        /// <summary>Allegado: arte pintado si existe, si no el modelo procedural.</summary>
+        public static ModelRig NpcOrArt(Transform parent, string id)
+        {
+            float h = id == "umr" ? 3.2f : id == "jenkin" ? 0.8f : id == "wilbur" ? 2.4f : 2f;
+            return ArtIA.SpriteRig(parent, id, h, id == "jenkin" ? 0.3f : 0.5f) ?? Npc(parent, id);
+        }
+
         // =================================================================
         // ALIADOS Y FAMILIARES
         // =================================================================

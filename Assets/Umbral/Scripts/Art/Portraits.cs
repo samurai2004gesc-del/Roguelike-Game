@@ -18,6 +18,8 @@ namespace Umbral
             bool f = Save.Data.female;
             string key = id == "sothis" ? (f ? "sothis_f" : "sothis_m") : id;
             if (cache.TryGetValue(key, out var s) && s != null) return s;
+            var ai = ArtIA.Sprite(ArtIA.Retratos, key, true) ?? (id == "boss_wilbur" ? ArtIA.Sprite(ArtIA.Retratos, "wilbur", true) : null);
+            if (ai != null) { cache[key] = ai; return ai; }
             var p = new Painter(W, H);
             Paint(p, key);
             var tex = p.ToTexture(key);

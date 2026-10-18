@@ -148,7 +148,10 @@ namespace Umbral
             for (int i = 0; i < 5; i++)
             {
                 var b = run.InSlot(slots[i]);
-                slotImgs[i].color = b != null ? b.def.God.color : new Color(0.1f, 0.08f, 0.14f, 0.85f);
+                var gsp = b != null ? ArtIA.Sprite(ArtIA.Iconos, b.def.god) : null;
+                slotImgs[i].sprite = gsp != null ? gsp : UIKit.diamondSprite;
+                slotImgs[i].preserveAspect = gsp != null;
+                slotImgs[i].color = gsp != null ? Color.white : b != null ? b.def.God.color : new Color(0.1f, 0.08f, 0.14f, 0.85f);
                 slotTxt[i].color = b != null ? Color.white : UIKit.Dim;
                 slotTxt[i].text = b != null ? $"{b.def.God.glyph}\n<size=12>Nv{b.level}</size>" : new[] { "ATQ", "ESP", "SIG", "ESPR", "LUC" }[i];
             }

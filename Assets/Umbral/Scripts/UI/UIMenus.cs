@@ -14,6 +14,7 @@ namespace Umbral
             CloseAll();
             var root = PushScreen("MenuPrincipal", null, 0f);
             root.gameObject.AddComponent<NoCancel>();
+            Backdrop(root, "menu", 1f);
             var title = UIKit.LabelAt(root, "UMBRAL", 150, new Color(0.85f, 0.8f, 1f), new Vector2(0.27f, 0.72f), Vector2.zero, new Vector2(1000, 200), TextAnchor.MiddleCenter, FontStyle.Bold);
             title.gameObject.AddComponent<Outline>().effectColor = new Color(0.3f, 0.1f, 0.5f, 0.9f);
             title.gameObject.AddComponent<TitleGlow>();
@@ -87,6 +88,54 @@ namespace Umbral
             var b = UIKit.Button(panel, "No", new Vector2(0.7f, 0.2f), Vector2.zero, new Vector2(260, 64), PopScreen);
             UIKit.ChainNav(new List<Selectable> { a, b }, true);
             UIKit.Select(b.gameObject);
+        }
+
+        /// <summary>Ilustración de fondo a pantalla completa (si existe en ArtIA/fondos).</summary>
+        public Image Backdrop(RectTransform root, string id, float alpha)
+        {
+            var sp = ArtIA.Sprite(ArtIA.Fondos, id);
+            if (sp == null) return null;
+            var rt = UIKit.Stretch(root, "Fondo");
+            rt.SetSiblingIndex(0);
+            var img = UIKit.Img(rt, new Color(1, 1, 1, alpha));
+            img.sprite = sp;
+            var fitter = rt.gameObject.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fitter.aspectRatio = (float)sp.texture.width / sp.texture.height;
+            return img;
+        }
+
+        /// <summary>Presentación de región: ilustración a pantalla completa (o rótulo si no hay imagen).</summary>
+        public void RegionIntro(BiomeDef b)
+        {
+            var sp = ArtIA.Sprite(ArtIA.Fondos, b.id);
+            if (sp == null) { Banner(b.name, b.subtitle, b.veins, 3.5f); return; }
+            StartCoroutine(RegionIntroCo(b, sp));
+        }
+
+        System.Collections.IEnumerator RegionIntroCo(BiomeDef b, Sprite sp)
+        {
+            var rt = UIKit.Stretch(top, "Region");
+            rt.SetSiblingIndex(0);
+            var cg = rt.gameObject.AddComponent<CanvasGroup>();
+            cg.blocksRaycasts = false;
+            var img = UIKit.Img(UIKit.Stretch(rt, "img"), Color.white);
+            img.sprite = sp;
+            var fit = img.gameObject.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fit.aspectRatio = (float)sp.texture.width / sp.texture.height;
+            var shade = UIKit.Img(UIKit.Rect(rt, "sombra", Vector2.zero, new Vector2(1, 0.35f)), new Color(0, 0, 0, 0.7f));
+            var t = UIKit.LabelAt(rt, b.name, 80, b.veins, new Vector2(0.5f, 0.2f), Vector2.zero, new Vector2(1600, 110), TextAnchor.MiddleCenter, FontStyle.Bold);
+            t.gameObject.AddComponent<Outline>().effectColor = Color.black;
+            UIKit.LabelAt(rt, b.subtitle, 34, UIKit.Parchment, new Vector2(0.5f, 0.11f), Vector2.zero, new Vector2(1600, 50), TextAnchor.MiddleCenter, FontStyle.Italic);
+            float dur = 3.2f;
+            for (float x = 0; x < dur && rt != null; x += Time.unscaledDeltaTime)
+            {
+                cg.alpha = x < 0.3f ? x / 0.3f : x > dur - 0.8f ? (dur - x) / 0.8f : 1f;
+                img.rectTransform.localScale = Vector3.one * (1f + x * 0.015f);
+                yield return null;
+            }
+            if (rt != null) Destroy(rt.gameObject);
         }
 
         // ================================================================== PAUSA
@@ -183,6 +232,7 @@ namespace Umbral
         {
             var root = PushScreen("Muerte", null, 0.9f);
             root.gameObject.AddComponent<NoCancel>();
+            Backdrop(root, "muerte", 0.55f);
             var t = UIKit.LabelAt(root, "LA PUERTA TE RECLAMA", 84, new Color(0.85f, 0.3f, 0.45f), new Vector2(0.5f, 0.8f), Vector2.zero, new Vector2(1600, 120), TextAnchor.MiddleCenter, FontStyle.Bold);
             t.gameObject.AddComponent<Outline>().effectColor = Color.black;
             UIKit.LabelAt(root, string.IsNullOrEmpty(killer) ? "Has muerto." : $"Te ha derrotado: {killer}", 32, UIKit.Parchment, new Vector2(0.5f, 0.7f), Vector2.zero, new Vector2(1400, 50), TextAnchor.MiddleCenter, FontStyle.Italic);
@@ -195,6 +245,7 @@ namespace Umbral
         {
             var root = PushScreen("Victoria", null, 0.92f);
             root.gameObject.AddComponent<NoCancel>();
+            Backdrop(root, "victoria", 0.6f);
             var t = UIKit.LabelAt(root, "HAS CRUZADO LA ÚLTIMA PUERTA", 72, new Color(0.85f, 0.85f, 1f), new Vector2(0.5f, 0.86f), Vector2.zero, new Vector2(1700, 110), TextAnchor.MiddleCenter, FontStyle.Bold);
             t.gameObject.AddComponent<TitleGlow>();
             string epi = first

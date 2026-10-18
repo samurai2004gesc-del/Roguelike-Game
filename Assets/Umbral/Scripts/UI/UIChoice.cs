@@ -113,8 +113,14 @@ namespace Umbral
             var bg = UIKit.Img(rt, new Color(0.06f, 0.03f, 0.1f, 0.97f), UIKit.panelSprite, true);
             var fr = UIKit.Img(UIKit.Stretch(rt, "Fr", -3), rc.WithA(0.75f), UIKit.frameSprite);
             var ic = UIKit.Box(rt, "Icono", new Vector2(0, 0.5f), new Vector2(26, 0), new Vector2(110, 110), new Vector2(0, 0.5f));
-            UIKit.Img(ic, iconC, UIKit.diamondSprite);
-            UIKit.Label(ic, iconTxt, 40, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            string iconId = o.hammer != null ? PlayerController.Instance?.weapon?.def?.id : o.upgrade != null ? o.upgrade.def.god : o.def?.god;
+            var iconSp = ArtIA.Sprite(ArtIA.Iconos, iconId);
+            if (iconSp != null) { var ii = UIKit.Img(ic, Color.white); ii.sprite = iconSp; ii.preserveAspect = true; }
+            else
+            {
+                UIKit.Img(ic, iconC, UIKit.diamondSprite);
+                UIKit.Label(ic, iconTxt, 40, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+            }
             var nm = UIKit.LabelAt(rt, name, 34, rc, new Vector2(0, 1), new Vector2(160, -16), new Vector2(700, 44), TextAnchor.MiddleLeft, FontStyle.Bold);
             nm.rectTransform.pivot = new Vector2(0, 1);
             var kl = UIKit.LabelAt(rt, kindLabel, 20, UIKit.Dim, new Vector2(1, 1), new Vector2(-24, -20), new Vector2(500, 30), TextAnchor.MiddleRight, FontStyle.Italic);
