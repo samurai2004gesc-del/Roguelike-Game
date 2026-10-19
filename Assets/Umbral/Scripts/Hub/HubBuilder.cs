@@ -116,6 +116,7 @@ namespace Umbral
                 Props.GodShrine(parent, at, gods[i]);
                 arena.obstacles.Add(new Arena.Obstacle(at, 0.5f, true));
             }
+            RoomBuilder.Scenery(parent, HubStyle, arena, rng);
             // estanterías, velas y objetos repartidos
             Props.Bookshelf(parent, At(15.5f, 1.5f), -up);
             Props.Bookshelf(parent, At(8f, 10.5f), -up);

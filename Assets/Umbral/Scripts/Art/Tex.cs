@@ -143,6 +143,24 @@ namespace Umbral
             }, false);
         }
 
+        /// <summary>Mancha de tinta irregular con gotas alrededor (para el suelo).</summary>
+        public static Texture2D InkSplat => Make("inksplat", 128, 128, (u, v) =>
+        {
+            Vector2 p = new Vector2(u - 0.5f, v - 0.5f) * 2f;
+            float ang = Mathf.Atan2(p.y, p.x);
+            float r = p.magnitude;
+            float edge = 0.55f + 0.18f * Mathf.Sin(ang * 5f) + 0.1f * Mathf.Sin(ang * 13f + 1f) + 0.08f * Mathf.PerlinNoise(u * 9f, v * 9f);
+            float a = Mathf.Clamp01((edge - r) * 12f);
+            // gotas
+            for (int i = 0; i < 9; i++)
+            {
+                float ga = i * 2.39f, gr = 0.72f + (i % 3) * 0.08f;
+                Vector2 c = new Vector2(Mathf.Cos(ga), Mathf.Sin(ga)) * gr;
+                a = Mathf.Max(a, Mathf.Clamp01((0.06f + (i % 2) * 0.03f - Vector2.Distance(p, c)) * 40f));
+            }
+            return new Color(1, 1, 1, a);
+        });
+
         /// <summary>Glifo de reloj/ojo para la textura de la Puerta y del Signo Arcano.</summary>
         public static Texture2D ElderSign => Make("eldersign", 256, 256, (u, v) =>
         {

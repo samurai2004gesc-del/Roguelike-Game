@@ -63,6 +63,63 @@ namespace Umbral
             return r;
         }
 
+        /// <summary>
+        /// Hoja de poses (ArtIA/animaciones/id): rejilla de 3 columnas x 2 filas.
+        /// Fila de arriba: reposo, carrera A, carrera B. Fila de abajo: preparación del golpe, golpe, impacto/esprint.
+        /// </summary>
+        public class Frames
+        {
+            public Rect[] uv = new Rect[6];
+            public Vector2[] size = new Vector2[6];   // tamaño en el mundo (ancho, alto)
+        }
+
+        static readonly Dictionary<string, Frames> framesCache = new Dictionary<string, Frames>();
+
+        public static Frames PoseSheet(string id, float height)
+        {
+            if (framesCache.TryGetValue(id + height, out var f)) return f;
+            var t = Tex("animaciones", id);
+            if (t == null || !t.isReadable) { framesCache[id + height] = null; return null; }
+            var px = t.GetPixels32();
+            int cw = t.width / 3, ch = t.height / 2;
+            var rects = new RectInt[6];
+            for (int i = 0; i < 6; i++)
+            {
+                int cx = (i % 3) * cw, cy = (i < 3 ? 1 : 0) * ch;   // fila de arriba = y alta en la textura
+                int minX = int.MaxValue, minY = int.MaxValue, maxX = -1, maxY = -1;
+                for (int y = cy + 2; y < cy + ch - 2; y += 2)
+                    for (int x = cx + 2; x < cx + cw - 2; x += 2)
+                        if (px[y * t.width + x].a > 110)
+                        {
+                            if (x < minX) minX = x; if (x > maxX) maxX = x;
+                            if (y < minY) minY = y; if (y > maxY) maxY = y;
+                        }
+                rects[i] = maxX > minX ? new RectInt(minX, minY, maxX - minX + 2, maxY - minY + 2) : new RectInt(-1, -1, 0, 0);
+            }
+            if (rects[0].width <= 0) { framesCache[id + height] = null; return null; }
+            for (int i = 1; i < 6; i++) if (rects[i].width <= 0) rects[i] = rects[0];
+            f = new Frames();
+            float worldPerPx = height / rects[0].height;   // el reposo define la escala
+            for (int i = 0; i < 6; i++)
+            {
+                var r = rects[i];
+                f.uv[i] = new Rect((float)r.x / t.width, (float)r.y / t.height, (float)r.width / t.width, (float)r.height / t.height);
+                f.size[i] = new Vector2(r.width * worldPerPx, r.height * worldPerPx);
+            }
+            framesCache[id + height] = f;
+            return f;
+        }
+
+        /// <summary>Cambia la región de la textura que muestra una malla en rejilla.</summary>
+        public static void ApplyUV(Mesh m, Rect uv, int cols = 4, int rows = 10)
+        {
+            var uvs = new Vector2[(cols + 1) * (rows + 1)];
+            for (int y = 0; y <= rows; y++)
+                for (int x = 0; x <= cols; x++)
+                    uvs[y * (cols + 1) + x] = new Vector2(Mathf.Lerp(uv.xMin, uv.xMax, (float)x / cols), Mathf.Lerp(uv.yMin, uv.yMax, (float)y / rows));
+            m.uv = uvs;
+        }
+
         /// <summary>Rejilla subdividida (para poder doblar la figura) con x en [-0.5, 0.5] e y en [0, 1].</summary>
         static Mesh GridMesh(string name, float u0, float u1, float v0, float v1, int cols = 4, int rows = 10)
         {
@@ -93,21 +150,33 @@ namespace Umbral
         /// </summary>
         public static ModelRig SpriteRig(Transform parent, string id, float height, float shadowRadius = 0.5f)
         {
-            var t = Tex(Personajes, id);
+            float h = height * 1.2f;
+            var frames = PoseSheet(id, h);
+            var t = frames != null ? Tex("animaciones", id) : Tex(Personajes, id);
             if (t == null) return null;
             var rig = CharacterArt.Root(parent, shadowRadius, out var body);
-            var r = Bounds(id, t);
-            float aspect = (float)r.width / Mathf.Max(1, r.height);
-            float h = height * 1.2f;
-
-            float u0 = (float)r.x / t.width, u1 = (float)(r.x + r.width) / t.width;
-            float v0 = (float)r.y / t.height, v1 = (float)(r.y + r.height) / t.height;
-            var mesh = GridMesh("sprite_" + id, u0, u1, v0, v1);
-            if (!spriteMats.TryGetValue(id, out var mat) || mat == null)
+            Mesh mesh;
+            float aspect;
+            if (frames != null)
             {
-                mat = new Material(Shader.Find("Umbral/Sprite")) { name = "Sprite_" + id };
+                mesh = GridMesh("poses_" + id, 0, 1, 0, 1);
+                ApplyUV(mesh, frames.uv[0]);
+                aspect = frames.size[0].x / frames.size[0].y;
+            }
+            else
+            {
+                var r = Bounds(id, t);
+                aspect = (float)r.width / Mathf.Max(1, r.height);
+                float u0 = (float)r.x / t.width, u1 = (float)(r.x + r.width) / t.width;
+                float v0 = (float)r.y / t.height, v1 = (float)(r.y + r.height) / t.height;
+                mesh = GridMesh("sprite_" + id, u0, u1, v0, v1);
+            }
+            string matKey = (frames != null ? "poses_" : "") + id;
+            if (!spriteMats.TryGetValue(matKey, out var mat) || mat == null)
+            {
+                mat = new Material(Shader.Find("Umbral/Sprite")) { name = "Sprite_" + matKey };
                 mat.SetTexture("_BaseMap", t);
-                spriteMats[id] = mat;
+                spriteMats[matKey] = mat;
             }
             var holder = Kit.Empty(body, "Sprite", Vector3.zero);
             var go = new GameObject("Figura");
@@ -123,6 +192,7 @@ namespace Umbral
             rig.spriteMode = true;
             var anim = go.AddComponent<SpriteAnimator>();
             anim.Setup(rig, mr, SpriteAnimator.ProfileFor(id), t);
+            if (frames != null) anim.SetFrames(frames, mesh);
             if (anim.profile.flies) { rig.floats = true; rig.floatHeight = anim.profile.flyHeight; }
             rig.Init();
             return rig;

@@ -68,6 +68,30 @@ namespace Umbral
             StretchId = Shader.PropertyToID("_Stretch"), OffsetId = Shader.PropertyToID("_Offset"),
             WaveId = Shader.PropertyToID("_Wave"), WaveTimeId = Shader.PropertyToID("_WaveTime");
 
+        ArtIA.Frames frames;
+        Mesh frameMesh;
+        int currentFrame = -1;
+
+        /// <summary>Activa la animación por poses (hoja de 3x2) además de la deformación.</summary>
+        public void SetFrames(ArtIA.Frames f, Mesh m) { frames = f; frameMesh = m; ShowFrame(0); }
+
+        void ShowFrame(int i)
+        {
+            if (frames == null || i == currentFrame) return;
+            currentFrame = i;
+            ArtIA.ApplyUV(frameMesh, frames.uv[i]);
+            transform.localScale = new Vector3(frames.size[i].x, frames.size[i].y, 1f);
+        }
+
+        int ChooseFrame(float k, bool dashing, float sinceSwing, float sinceHit)
+        {
+            if (dashing || sinceHit < 0.18f) return 5;
+            if (sinceSwing < 0.07f) return 3;
+            if (sinceSwing < 0.3f) return 4;
+            if (k > 0.15f) return Mathf.Sin(phase) >= 0 ? 1 : 2;
+            return 0;
+        }
+
         public void Setup(ModelRig r, MeshRenderer renderer, Profile p, Texture2D t)
         {
             rig = r; mr = renderer; profile = p; tex = t;
@@ -142,6 +166,7 @@ namespace Umbral
                 if (ghostTimer <= 0) { ghostTimer = 0.035f; SpawnGhost(player != null); }
             }
 
+            if (frames != null) ShowFrame(ChooseFrame(k, dashing, now - rig.lastSwingTime, now - rig.lastHitTime));
             waveTime += dt * (1f + k * 1.5f);
             mr.GetPropertyBlock(mpb);
             mpb.SetFloat(ShearId, shear);

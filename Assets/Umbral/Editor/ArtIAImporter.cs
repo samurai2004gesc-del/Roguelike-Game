@@ -22,7 +22,8 @@ namespace Umbral.EditorTools
             int s = rest.IndexOf('/');
             return s > 0 ? rest.Substring(0, s) : "";
         }
-        static bool NeedsKey(string folder) => folder == "retratos" || folder == "personajes" || folder == "iconos";
+        static bool NeedsKey(string folder) => folder == "retratos" || folder == "personajes" || folder == "iconos"
+                                                  || folder == "animaciones" || folder == "efectos" || folder == "decorado";
 
         void OnPreprocessTexture()
         {
@@ -33,10 +34,10 @@ namespace Umbral.EditorTools
             ti.sRGBTexture = true;
             ti.alphaSource = TextureImporterAlphaSource.FromInput;
             ti.alphaIsTransparency = NeedsKey(folder);
-            ti.mipmapEnabled = folder == "suelos" || folder == "personajes";
+            ti.mipmapEnabled = folder == "suelos" || folder == "personajes" || folder == "animaciones" || folder == "decorado";
             ti.wrapMode = folder == "suelos" ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
-            ti.isReadable = folder == "personajes";
-            ti.maxTextureSize = folder == "fondos" ? 2048 : 1024;
+            ti.isReadable = folder == "personajes" || folder == "animaciones";
+            ti.maxTextureSize = folder == "fondos" || folder == "animaciones" ? 2048 : 1024;
             ti.textureCompression = TextureImporterCompression.CompressedHQ;
             ti.npotScale = TextureImporterNPOTScale.None;
             ti.filterMode = FilterMode.Bilinear;

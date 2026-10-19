@@ -93,12 +93,54 @@ namespace Umbral
         public static void HitSpark(Vector3 pos, Vector2 dir, Color color)
         {
             Vector3 d3 = dir.X0Z();
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 9; i++)
             {
-                Vector3 v = (d3 + Random.insideUnitSphere * 0.9f).normalized * Random.Range(6f, 13f);
-                Emit(FxKind.Spark, pos, v, color, Random.Range(0.12f, 0.25f), Random.Range(0.15f, 0.3f));
+                Vector3 v = (d3 + Random.insideUnitSphere * 0.9f).normalized * Random.Range(7f, 15f);
+                Emit(FxKind.Spark, pos, v, Color.Lerp(color, Color.white, 0.4f), Random.Range(0.12f, 0.28f), Random.Range(0.12f, 0.28f));
             }
-            Emit(FxKind.Glow, pos, Vector3.zero, color, 1.2f, 0.12f);
+            // salpicaduras de tinta negra (sello de Hades)
+            for (int i = 0; i < 6; i++)
+            {
+                Vector3 v = (d3 * 0.8f + Random.insideUnitSphere).normalized * Random.Range(3f, 8f);
+                Emit(FxKind.Smoke, pos, v, new Color(0.03f, 0.01f, 0.05f, 0.95f), Random.Range(0.12f, 0.3f), Random.Range(0.18f, 0.35f));
+            }
+            Emit(FxKind.Glow, pos, Vector3.zero, color, 1.4f, 0.1f);
+            ImpactStar(pos, color, 1.3f);
+        }
+
+        /// <summary>Destello en estrella blanco-caliente que aparece y se encoge rápido en cada impacto.</summary>
+        public static void ImpactStar(Vector3 pos, Color color, float size)
+        {
+            var tex = ArtIA.Tex("efectos", "impacto");
+            var mat = tex != null ? Mats.NewUnlit(Color.white, Mats.Blend.Alpha, tex, 1.8f, false) : Mats.NewUnlit(Color.Lerp(color, Color.white, 0.7f), Mats.Blend.Additive, Tex.Star4, 3f, false);
+            var go = MeshObj("Impacto", MeshGen.Quad, mat, pos, Quaternion.identity, Vector3.one * size);
+            go.AddComponent<Billboard>();
+            go.transform.Rotate(0, 0, Random.Range(0, 360f));
+            Runner.Run(AnimateFade(go, mat, 0.14f, 1.7f, 0.2f));
+        }
+
+        /// <summary>Mancha de tinta en el suelo (al morir un enemigo), se desvanece lentamente.</summary>
+        public static void InkSplat(Vector3 pos, float size, Color tint)
+        {
+            var tex = ArtIA.Tex("efectos", "salpicadura");
+            var mat = Mats.NewUnlit(tex != null ? Color.white : new Color(0.02f, 0.01f, 0.03f, 0.85f), Mats.Blend.Alpha, tex != null ? tex : Tex.InkSplat, 1f, false);
+            var go = MeshObj("Mancha", MeshGen.Quad, mat, new Vector3(pos.x, 0.035f, pos.z), Quaternion.Euler(90, Random.Range(0, 360f), 0), Vector3.one * size);
+            Runner.Run(SplatLife(go, mat, 7f));
+        }
+
+        static IEnumerator SplatLife(GameObject go, Material mat, float life)
+        {
+            Color c0 = mat.GetColor(Mats.BaseColorId);
+            float t = 0; Vector3 s0 = go.transform.localScale;
+            while (t < life && go != null)
+            {
+                t += Time.deltaTime;
+                if (t < 0.12f) go.transform.localScale = s0 * U.EaseOutBack(t / 0.12f);
+                if (t > life - 1.5f) mat.SetColor(Mats.BaseColorId, c0.WithA(c0.a * (life - t) / 1.5f));
+                yield return null;
+            }
+            if (go != null) Object.Destroy(go);
+            Object.Destroy(mat);
         }
 
         public static void Smoke(Vector3 pos, Color color, int count = 8, float size = 1f)
@@ -126,13 +168,47 @@ namespace Umbral
         }
 
         /// <summary>Arco de tajo brillante, el sello visual de los ataques cuerpo a cuerpo de Hades.</summary>
+        static Shader slashShader;
+
+        /// <summary>
+        /// Tajo de pincel en dos tonos (tinta negra + núcleo brillante) que se dibuja en barrido, como en Hades II.
+        /// </summary>
         public static void Slash(Vector3 pos, Vector2 dir, float radius, float angle, Color color, float duration = 0.18f, float height = 0.9f, bool flip = false)
         {
-            var mat = Mats.NewUnlit(color, Mats.Blend.Additive, Tex.SlashGradient, 2.6f, false);
+            if (slashShader == null) slashShader = Shader.Find("Umbral/Slash");
+            var mat = new Material(slashShader) { name = "Tajo" };
+            mat.SetColor("_Core", color);
+            mat.SetColor("_Edge", Color.Lerp(color, Color.white, 0.8f));
+            mat.SetFloat("_Intensity", 1.8f);
+            mat.SetFloat("_Seed", Random.Range(0f, 50f));
+            mat.renderQueue = 3050;
+            var tex = ArtIA.Tex("efectos", "tajo");
+            if (tex != null) { mat.SetTexture("_BaseMap", tex); mat.SetFloat("_UseTex", 1f); }
             var rot = U.LookFlat(dir) * Quaternion.Euler(0, 0, flip ? 180 : 0);
-            var go = MeshObj("Slash", MeshGen.SlashArc(angle, 0.55f), mat, pos + Vector3.up * height, rot, Vector3.one * radius);
+            var go = MeshObj("Slash", MeshGen.SlashArc(angle, 0.6f), mat, pos + Vector3.up * height, rot, Vector3.one * radius);
             if (flip) go.transform.localScale = new Vector3(-radius, radius, radius);
-            Runner.Run(AnimateFade(go, mat, duration, 1.12f, 0.15f));
+            Runner.Run(AnimateSlash(go, mat, Mathf.Max(0.2f, duration * 1.5f), radius));
+        }
+
+        static IEnumerator AnimateSlash(GameObject go, Material mat, float duration, float radius)
+        {
+            float t = 0;
+            Vector3 s0 = go.transform.localScale;
+            while (t < duration && go != null)
+            {
+                t += Time.deltaTime;
+                float k = t / duration;
+                // la cabeza barre rápido (primer 40%) y la cola la sigue hasta deshacer el trazo
+                float head = Mathf.Lerp(0f, 1.05f, U.EaseOutCubic(Mathf.Clamp01(k / 0.4f)));
+                float tail = Mathf.Lerp(1.1f, 0.05f, Mathf.Clamp01((k - 0.35f) / 0.65f));
+                mat.SetFloat("_Head", head);
+                mat.SetFloat("_TailLen", tail);
+                mat.SetFloat("_Fade", k > 0.7f ? 1f - (k - 0.7f) / 0.3f : 1f);
+                go.transform.localScale = s0 * Mathf.Lerp(0.92f, 1.08f, U.EaseOutCubic(k));
+                yield return null;
+            }
+            if (go != null) Object.Destroy(go);
+            Object.Destroy(mat);
         }
 
         public static void Ring(Vector3 pos, float radius, Color color, float duration = 0.4f, float startFrac = 0.2f, float intensity = 2f)

@@ -222,6 +222,34 @@ namespace Umbral
             lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
+        /// <summary>
+        /// Encuadre al estilo Hades: siluetas oscuras en primer plano a lo largo del borde más cercano a la cámara
+        /// (y algunas en los laterales) y detalles pintados en el suelo.
+        /// </summary>
+        public static void Scenery(Transform parent, BiomeDef b, Arena arena, System.Random rng)
+        {
+            Vector2 up = S2W(Vector2.up);
+            float acc = 0;
+            for (int i = 0; i < arena.polygon.Count; i++)
+            {
+                Vector2 a = arena.polygon[i], c = arena.polygon[(i + 1) % arena.polygon.Count];
+                Vector2 dir = (c - a).normalized;
+                Vector2 outward = new Vector2(dir.y, -dir.x);
+                float facing = Vector2.Dot(outward, up);
+                float len = Vector2.Distance(a, c);
+                for (float t = 0; t < len; t += 1f)
+                {
+                    acc += 1f;
+                    float every = facing < -0.35f ? 4.5f : facing < 0.35f ? 7f : 99f;
+                    if (acc < every) continue;
+                    acc = 0;
+                    Props.Foreground(parent, b, a + dir * t + outward * rng.Range(2.2f, 4f), rng);
+                }
+            }
+            int n = Mathf.RoundToInt(arena.bounds.Size.x * arena.bounds.Size.y / 30f);
+            for (int i = 0; i < n; i++) Props.GroundDecal(parent, b, arena.RandomPoint(rng, 0.2f, 0f, Vector2.zero), rng);
+        }
+
         /// <summary>Decoración del borde, obstáculos, fosas, islas flotantes y luces.</summary>
         public static void Dress(BiomeDef b, Arena arena, System.Random rng, bool lights = true)
         {
@@ -258,6 +286,7 @@ namespace Umbral
                     }
                 }
             }
+            if (arena.polygon.Count > 2) Scenery(parent, b, arena, rng);
             // detalles pequeños repartidos por el suelo (no bloquean el paso)
             if (arena.polygon.Count > 2)
             {

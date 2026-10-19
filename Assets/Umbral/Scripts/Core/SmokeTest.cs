@@ -101,6 +101,14 @@ namespace Umbral
                 // caminar para ver la animación
                 for (int i = 0; i < 30; i++) { pl.MoveBy(right * 0.08f); pl.rig.velocity = right * 6f; yield return null; }
                 yield return Shot("03e_caminando", 0f);
+                // galería de tajos a mitad de barrido
+                var c0 = pl.transform.position;
+                Fx.Slash(c0 + (right * -4f).X0Z(), right, 2.8f, 150, new Color(0.75f, 0.85f, 1f), 0.2f);
+                Fx.Slash(c0 + (right * 0f + up * 3f).X0Z(), U.Dir(30), 3.3f, 200, new Color(1f, 0.82f, 0.4f), 0.22f);
+                Fx.Slash(c0 + (right * 4f).X0Z(), -up, 2.1f, 110, new Color(0.45f, 0.95f, 0.9f), 0.12f, 0.9f, true);
+                Fx.HitSpark(c0 + (right * 4f + up * 2f).X0Z(1f), right, new Color(1f, 0.5f, 0.9f));
+                yield return new WaitForSecondsRealtime(0.09f);
+                yield return Shot("03f_tajos", 0f);
             }
             UIRoot.Instance.OpenGrimorio(); yield return Shot("04_grimorio"); UIRoot.Instance.CloseAll();
             UIRoot.Instance.OpenCaldero(); yield return Shot("05_caldero"); UIRoot.Instance.CloseAll();

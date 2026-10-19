@@ -223,6 +223,8 @@ namespace Umbral
             StopAllCoroutines();
             Sfx.Play(SfxId.EnemyDeath, transform.position, isElite ? 1f : 0.8f, isElite ? 0.7f : 1f);
             Fx.Burst(transform.position + Vector3.up * height * 0.5f, def.accent, isElite ? 30 : 16, 7f, 0.35f, 0.6f);
+            Fx.InkSplat(transform.position, radius * (isElite ? 4.5f : 3.2f), def.accent);
+            Fx.ImpactStar(transform.position + Vector3.up * height * 0.5f, def.accent, isElite ? 3.5f : 2.4f);
             Fx.Smoke(transform.position + Vector3.up * 0.5f, new Color(0.08f, 0.04f, 0.1f, 0.85f), isElite ? 14 : 8, 1.2f);
             if (isElite) CameraRig.Shake(0.35f);
             if (!string.IsNullOrEmpty(def.deathSpawn))

@@ -154,7 +154,8 @@ namespace Umbral
         void Form(float duration)
         {
             formed = true;
-            mat = Mats.NewUnlit(SignColor.WithA(0.95f), Mats.Blend.Additive, Tex.ElderSign, omega ? 3.2f : 2.4f, false);
+            var painted = ArtIA.Tex("efectos", "circulo");
+            mat = Mats.NewUnlit(painted != null ? Color.white : SignColor.WithA(0.95f), Mats.Blend.Additive, painted != null ? painted : Tex.ElderSign, painted != null ? (omega ? 2.2f : 1.6f) : (omega ? 3.2f : 2.4f), false);
             disc = Fx.MeshObj("Disc", MeshGen.Quad, mat, center.X0Z(0.07f), Quaternion.Euler(90, 0, 0), Vector3.one * radius * 2f).transform;
             disc.SetParent(transform, true);
             glowMat = Mats.NewUnlit(SignColor.WithA(0.25f), Mats.Blend.Additive, Tex.SoftCircle, 1.5f, false);
@@ -188,7 +189,7 @@ namespace Umbral
             float dt = Time.deltaTime;
             if (disc != null) disc.Rotate(0, 0, 25f * dt, Space.Self);
             float left = until - Time.time;
-            if (mat != null) mat.SetColor(Mats.BaseColorId, SignColor.WithA(Mathf.Clamp01(left * 2f) * 0.95f));
+            if (mat != null) mat.SetColor(Mats.BaseColorId, (ArtIA.Has("efectos", "circulo") ? Color.white : SignColor).WithA(Mathf.Clamp01(left * 2f) * 0.95f));
             if (lightC != null) lightC.intensity = (omega ? 4f : 2.5f) * Mathf.Clamp01(left * 2f) * (0.85f + 0.15f * Mathf.Sin(Time.time * 8f));
             // nuevos enemigos que entren quedan atados
             foreach (var c in Combat.InCircle(center, radius, Team.Player)) if (!c.status.Has(StatusType.Atado)) Bind(c);

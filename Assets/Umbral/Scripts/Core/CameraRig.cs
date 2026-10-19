@@ -13,7 +13,7 @@ namespace Umbral
         public static CameraRig Instance;
         public Camera cam;
         public Transform target;
-        public float pitch = 52f, yaw = 45f, distance = 25f, fov = 24f;
+        public float pitch = 52f, yaw = 45f, distance = 28f, fov = 24f;
         public float lookAhead = 1.6f;
 
         Vector3 focus;
@@ -65,7 +65,7 @@ namespace Umbral
             bloom.scatter.Override(0.72f);
 
             vignette = profile.Add<Vignette>(true);
-            vignette.intensity.Override(0.38f);
+            vignette.intensity.Override(0.46f);
             vignette.smoothness.Override(0.45f);
             vignette.color.Override(new Color(0.08f, 0.0f, 0.12f));
 
@@ -144,7 +144,7 @@ namespace Umbral
 
             hurtPulse = Mathf.Max(0, hurtPulse - Time.unscaledDeltaTime * 2.5f);
             if (chroma != null) chroma.intensity.Override(0.08f + hurtPulse * 0.7f);
-            if (vignette != null) vignette.intensity.Override(0.38f + hurtPulse * 0.15f);
+            if (vignette != null) vignette.intensity.Override(0.46f + hurtPulse * 0.15f);
         }
 
         void Apply(Vector3 shake)
