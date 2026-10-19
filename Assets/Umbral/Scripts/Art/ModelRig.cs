@@ -23,6 +23,11 @@ namespace Umbral
 
         [System.NonSerialized] public Vector2 velocity;
         [System.NonSerialized] public float speedRef = 5f;
+        /// <summary>Figura pintada: la anima <see cref="SpriteAnimator"/> en el shader (no se escala el cuerpo).</summary>
+        [System.NonSerialized] public bool spriteMode;
+        [System.NonSerialized] public float lastSwingTime = -10f, lastHitTime = -10f;
+        public float Squash => squash;
+        public bool Frozen => iceShell != null;
 
         MaterialPropertyBlock mpb;
         float flash;
@@ -51,6 +56,7 @@ namespace Umbral
         {
             flash = Mathf.Max(flash, amount);
             flashColor = c;
+            lastHitTime = Time.time;
             Kick(0.18f);
         }
 
@@ -61,6 +67,7 @@ namespace Umbral
         public void Swing(float fromDeg, float toDeg, float duration)
         {
             swingFrom = fromDeg; swingTo = toDeg; swingDur = Mathf.Max(0.05f, duration); swingT = 0;
+            lastSwingTime = Time.time;
             Kick(0.25f);
         }
 
@@ -110,9 +117,12 @@ namespace Umbral
                 // inclinación en la dirección de movimiento (en espacio local del personaje)
                 Vector3 localVel = transform.InverseTransformDirection(new Vector3(velocity.x, 0, velocity.y));
                 Quaternion lean = Quaternion.Euler(localVel.z / Mathf.Max(1f, speedRef) * leanAmount, 0, -localVel.x / Mathf.Max(1f, speedRef) * leanAmount);
-                body.localRotation = bodyBaseRot * lean;
-                float s = 1f + squash;
-                body.localScale = new Vector3(1f / Mathf.Sqrt(s), s, 1f / Mathf.Sqrt(s));
+                if (!spriteMode)
+                {
+                    body.localRotation = bodyBaseRot * lean;
+                    float s = 1f + squash;
+                    body.localScale = new Vector3(1f / Mathf.Sqrt(s), s, 1f / Mathf.Sqrt(s));
+                }
             }
 
             if (weaponPivot != null && swingT < 1f)

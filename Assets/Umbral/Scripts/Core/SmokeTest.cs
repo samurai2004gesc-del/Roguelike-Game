@@ -91,6 +91,17 @@ namespace Umbral
             yield return new WaitForSecondsRealtime(1f);
             UIDialogue_Force(false);
             yield return Shot("03_santuario");
+            {
+                var pl = PlayerController.Instance;
+                Vector2 up = Vector2.up.Rotate(-CameraRig.Instance.yaw), right = Vector2.right.Rotate(-CameraRig.Instance.yaw);
+                pl.Teleport((right * 8f + up * 5f) * 0.7f); yield return Shot("03b_santuario_este", 1.2f);
+                pl.Teleport((right * -8f + up * 5f) * 0.7f); yield return Shot("03c_santuario_oeste", 1.2f);
+                pl.Teleport((up * 10f) * 0.7f); yield return Shot("03d_santuario_puerta", 1.2f);
+                pl.Teleport(Vector2.zero);
+                // caminar para ver la animación
+                for (int i = 0; i < 30; i++) { pl.MoveBy(right * 0.08f); pl.rig.velocity = right * 6f; yield return null; }
+                yield return Shot("03e_caminando", 0f);
+            }
             UIRoot.Instance.OpenGrimorio(); yield return Shot("04_grimorio"); UIRoot.Instance.CloseAll();
             UIRoot.Instance.OpenCaldero(); yield return Shot("05_caldero"); UIRoot.Instance.CloseAll();
             UIRoot.Instance.OpenWeaponAltar(); yield return Shot("06_armas"); UIRoot.Instance.CloseAll();

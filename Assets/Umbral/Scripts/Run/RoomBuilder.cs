@@ -258,6 +258,16 @@ namespace Umbral
                     }
                 }
             }
+            // detalles pequeños repartidos por el suelo (no bloquean el paso)
+            if (arena.polygon.Count > 2)
+            {
+                int n = Mathf.RoundToInt(arena.bounds.Size.x * arena.bounds.Size.y / 22f);
+                for (int i = 0; i < n; i++)
+                {
+                    var q = arena.RandomPoint(rng, 0.2f, 2.5f, Vector2.zero);
+                    Props.Clutter(parent, b.id, q, rng);
+                }
+            }
             // islas flotantes lejanas
             for (int i = 0; i < 16; i++)
             {

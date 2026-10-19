@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Umbral
 {
     /// <summary>Atrezo procedural por región: árboles retorcidos, monolitos de R'lyeh, piedras de Leng, carne y cristal de Azathoth.</summary>
-    public static class Props
+    public static partial class Props
     {
         static Material T(Color c, Color? e = null, float outline = 1f) => Mats.Toon(c, e, outline);
         static Material G(Color c, float i = 3f) => Mats.Unlit(c, Mats.Blend.Additive, null, i, false);
@@ -69,7 +69,7 @@ namespace Umbral
             Fx.MeshObj("FosaFondo", MeshGen.Quad, Mats.Unlit(b.voidC.WithA(0.25f), Mats.Blend.Additive, Tex.Swirl, 1.2f, false), at.X0Z(0.035f), Quaternion.Euler(90, 0, 0), Vector3.one * r * 1.8f).transform.SetParent(parent, true);
         }
 
-        static void Mushrooms(Transform root, Color c, float r, System.Random rng, int n)
+        public static void Mushrooms(Transform root, Color c, float r, System.Random rng, int n)
         {
             for (int i = 0; i < n; i++)
             {
@@ -81,7 +81,7 @@ namespace Umbral
             }
         }
 
-        static void Coral(Transform root, float r, System.Random rng)
+        public static void Coral(Transform root, float r, System.Random rng)
         {
             for (int i = 0; i < 3; i++)
             {

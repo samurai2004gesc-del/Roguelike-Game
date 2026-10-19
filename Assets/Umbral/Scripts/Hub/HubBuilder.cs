@@ -90,14 +90,7 @@ namespace Umbral
                 {
                     Vector2 p = a + dir * t + outN * 0.6f;
                     if (Vector2.Dot(outN, up) < -0.4f) continue;
-                    float h = rng.Range(2f, 5f);
-                    var col = Kit.Part(parent, MeshGen.Cylinder, Mats.Toon(new Color(0.42f, 0.38f, 0.52f), null, 1f), p.X0Z(h * 0.5f), new Vector3(0.9f, h * 0.5f, 0.9f), new Vector3(rng.Range(-4f, 4f), 0, rng.Range(-4f, 4f)));
-                    Kit.Part(parent, MeshGen.Cube, Mats.Toon(new Color(0.35f, 0.3f, 0.45f), null, 1f), p.X0Z(h + 0.15f), new Vector3(1.3f, 0.3f, 1.3f));
-                    if (rng.NextDouble() < 0.5)
-                    {
-                        var g = Kit.Glow(parent, Color.HSVToRGB((float)rng.NextDouble(), 0.5f, 1f), 0.45f, p.X0Z(h + 1.2f), 2.5f);
-                        g.gameObject.AddComponent<Floater>().amp = 0.3f;
-                    }
+                    Props.BrokenColumn(parent, p, rng);
                 }
             }
             // las esferas iridiscentes del Padre, enormes, en lo alto
@@ -114,6 +107,26 @@ namespace Umbral
             rune.transform.SetParent(parent, true);
             rune.AddComponent<Spin>().speed = 0;
             Kit.PointLight(parent, new Color(0.7f, 0.6f, 1f), 12f, 1.6f, new Vector3(0, 3f, 0));
+            // santuario de los Primigenios: medallones de los dioses junto a la Puerta
+            string[] gods = { "cthulhu", "hastur", "shub", "nodens", "ithaqua", "cthugha" };
+            for (int i = 0; i < gods.Length; i++)
+            {
+                float x = (i < 3 ? -1 : 1) * (5.5f + (i % 3) * 2.6f);
+                var at = At(x, 12.5f - (i % 3) * 1.6f);
+                Props.GodShrine(parent, at, gods[i]);
+                arena.obstacles.Add(new Arena.Obstacle(at, 0.5f, true));
+            }
+            // estanterías, velas y objetos repartidos
+            Props.Bookshelf(parent, At(15.5f, 1.5f), -up);
+            Props.Bookshelf(parent, At(8f, 10.5f), -up);
+            Props.Bookshelf(parent, At(-16f, 5f), right);
+            foreach (var c in new[] { At(-3f, 4f), At(3f, 4f), At(-6f, -5f), At(7f, -6f), At(14f, 5f), At(-13f, 1f), At(1f, 11f), At(-9f, 7.5f) })
+                Props.Candles(parent, c.X0Z(), 3 + rng.Next(0, 3));
+            for (int i = 0; i < 14; i++)
+            {
+                var q = arena.RandomPoint(rng, 0.3f, 3.5f, Vector2.zero);
+                Props.Clutter(parent, "umbral", q, rng);
+            }
             RoomBuilder.Dress(new BiomeDef
             {
                 id = "azathoth", floorA = HubStyle.floorA, floorB = HubStyle.floorB, crack = HubStyle.crack, veins = HubStyle.veins,
@@ -128,7 +141,7 @@ namespace Umbral
         {
             var root = Kit.Empty(parent, name, at.X0Z());
             root.rotation = U.LookFlat(-up);
-            var stone = Mats.Toon(new Color(0.38f, 0.34f, 0.48f), null, 1f);
+            var stone = Mats.Toon(new Color(0.22f, 0.19f, 0.3f), null, 1f);
             Color glow = new Color(0.7f, 0.6f, 1f);
             switch (kind)
             {
@@ -137,7 +150,12 @@ namespace Umbral
                     for (int i = 0; i < 5; i++)
                     {
                         var w = Weapons.All[i];
-                        var g = Kit.Glow(root, w.Unlocked ? w.color : new Color(0.2f, 0.2f, 0.25f), 0.35f, new Vector3(Mathf.Cos(i * 1.256f) * 0.8f, 1.6f + (i % 2) * 0.3f, Mathf.Sin(i * 1.256f) * 0.8f), w.Unlocked ? 2.5f : 0.6f);
+                        var wpos = new Vector3(Mathf.Cos(i * 1.256f) * 0.85f, 1.6f + (i % 2) * 0.3f, Mathf.Sin(i * 1.256f) * 0.85f);
+                        var wicon = ArtIA.Tex(ArtIA.Iconos, w.id);
+                        Transform g = wicon != null
+                            ? Kit.Part(root, MeshGen.Quad, Mats.Unlit(w.Unlocked ? Color.white : new Color(0.25f, 0.25f, 0.3f), Mats.Blend.Alpha, wicon, 1.1f, false), wpos, Vector3.one * 0.7f, default, "arma", false)
+                            : Kit.Glow(root, w.Unlocked ? w.color : new Color(0.2f, 0.2f, 0.25f), 0.35f, wpos, w.Unlocked ? 2.5f : 0.6f);
+                        if (wicon != null) g.gameObject.AddComponent<Billboard>();
                         g.gameObject.AddComponent<Floater>().amp = 0.15f;
                     }
                     glow = new Color(0.75f, 0.85f, 1f);
@@ -151,16 +169,43 @@ namespace Umbral
                     break;
                 case StationKind.Grimoire:
                 case StationKind.Codex:
-                    Kit.Part(root, MeshGen.Cylinder, stone, new Vector3(0, 0.6f, 0), new Vector3(0.5f, 0.6f, 0.5f));
-                    Kit.Part(root, MeshGen.Cube, Mats.Toon(kind == StationKind.Codex ? new Color(0.3f, 0.18f, 0.12f) : new Color(0.15f, 0.25f, 0.1f), null, 1f), new Vector3(0, 1.3f, 0), new Vector3(1.1f, 0.15f, 0.8f), new Vector3(-20, 0, 0));
-                    Kit.Glow(root, kind == StationKind.Codex ? new Color(0.5f, 1f, 0.45f) : new Color(0.6f, 1f, 0.4f), 0.25f, new Vector3(0, 1.6f, 0), 2.5f).gameObject.AddComponent<Floater>().amp = 0.1f;
-                    glow = kind == StationKind.Codex ? new Color(0.5f, 1f, 0.45f) : new Color(0.6f, 1f, 0.4f);
-                    break;
+                    {
+                        // atril de madera oscura con un libro abierto, velas y runas flotantes
+                        bool codex = kind == StationKind.Codex;
+                        glow = codex ? new Color(0.5f, 1f, 0.45f) : new Color(0.6f, 1f, 0.4f);
+                        var wood = Mats.Toon(new Color(0.25f, 0.15f, 0.1f), null, 1f);
+                        Kit.Part(root, MeshGen.Cylinder, wood, new Vector3(0, 0.55f, 0), new Vector3(0.22f, 0.55f, 0.22f));
+                        Kit.Part(root, MeshGen.Cylinder, wood, new Vector3(0, 0.04f, 0), new Vector3(0.9f, 0.04f, 0.9f));
+                        var top = Kit.Empty(root, "atril", new Vector3(0, 1.15f, 0), new Vector3(-28, 0, 0));
+                        Kit.Part(top, MeshGen.Cube, wood, Vector3.zero, new Vector3(1.2f, 0.08f, 0.85f));
+                        var cover = Mats.Toon(codex ? new Color(0.35f, 0.18f, 0.12f) : new Color(0.12f, 0.22f, 0.1f), null, 1f);
+                        var page = Mats.Toon(new Color(0.9f, 0.84f, 0.68f), new Color(0.1f, 0.12f, 0.05f), 0.7f);
+                        Kit.Part(top, MeshGen.Cube, cover, new Vector3(0, 0.07f, 0), new Vector3(1.0f, 0.05f, 0.7f));
+                        Kit.Part(top, MeshGen.Cube, page, new Vector3(-0.24f, 0.11f, 0), new Vector3(0.46f, 0.04f, 0.62f), new Vector3(0, 0, 6));
+                        Kit.Part(top, MeshGen.Cube, page, new Vector3(0.24f, 0.11f, 0), new Vector3(0.46f, 0.04f, 0.62f), new Vector3(0, 0, -6));
+                        Kit.Part(top, MeshGen.Quad, Mats.Unlit(glow.WithA(0.9f), Mats.Blend.Additive, Tex.ElderSign, 2f, false), new Vector3(0.24f, 0.14f, 0), Vector3.one * 0.4f, new Vector3(90, 0, 0), "runa", false);
+                        Props.Candles(root, new Vector3(0.75f, 0, 0.3f), 3);
+                        Props.Candles(root, new Vector3(-0.75f, 0, -0.2f), 2);
+                        if (codex) for (int i = 0; i < 4; i++) Props.FloatingBook(root, i);
+                        break;
+                    }
                 case StationKind.Quests:
-                    Kit.Part(root, MeshGen.Cube, stone, new Vector3(0, 1.3f, 0), new Vector3(2.2f, 2.6f, 0.3f));
-                    for (int i = 0; i < 9; i++) Kit.Glow(root, new Color(0.7f, 0.85f, 1f), 0.09f, new Vector3((i % 3 - 1) * 0.6f, 0.7f + (i / 3) * 0.6f, -0.2f), 3f);
-                    glow = new Color(0.6f, 0.8f, 1f);
-                    break;
+                    {
+                        // astrolabio de anillos girando sobre un pedestal: los presagios en las estrellas
+                        Kit.Part(root, MeshGen.Cylinder, stone, new Vector3(0, 0.45f, 0), new Vector3(0.9f, 0.45f, 0.9f));
+                        Kit.Part(root, MeshGen.Cylinder, Mats.Toon(new Color(0.85f, 0.7f, 0.35f), new Color(0.2f, 0.12f, 0f), 1f), new Vector3(0, 0.93f, 0), new Vector3(1f, 0.04f, 1f));
+                        var gold = Mats.Toon(new Color(0.9f, 0.75f, 0.35f), new Color(0.25f, 0.15f, 0f), 0.8f);
+                        for (int i = 0; i < 3; i++)
+                        {
+                            var ring = Kit.Empty(root, "anillo", new Vector3(0, 1.9f, 0), new Vector3(i * 60, i * 45, 0));
+                            Kit.Part(ring, MeshGen.Ring(0.9f), gold, Vector3.zero, Vector3.one * (0.75f - i * 0.12f), new Vector3(90, 0, 0), "aro", false);
+                            ring.gameObject.AddComponent<Spin>().speed = 25f + i * 20f;
+                        }
+                        Kit.Glow(root, new Color(0.7f, 0.85f, 1f), 0.28f, new Vector3(0, 1.9f, 0), 2.2f);
+                        for (int i = 0; i < 7; i++) Kit.Glow(root, new Color(0.8f, 0.9f, 1f), 0.07f, new Vector3(Mathf.Cos(i * 0.9f) * 0.9f, 1.5f + Mathf.Sin(i * 1.7f) * 0.6f, Mathf.Sin(i * 0.9f) * 0.9f), 2.5f).gameObject.AddComponent<Floater>().amp = 0.1f;
+                        glow = new Color(0.6f, 0.8f, 1f);
+                        break;
+                    }
                 case StationKind.Oath:
                     Kit.Part(root, MeshGen.Crystal(4, 0.25f), Mats.Toon(new Color(0.1f, 0.04f, 0.06f), new Color(0.3f, 0.0f, 0.05f), 1f), Vector3.zero, new Vector3(1.2f, 3.4f, 1.2f));
                     Kit.Part(root, MeshGen.Ring(0.85f), Mats.Unlit(new Color(1f, 0.25f, 0.25f), Mats.Blend.Additive, null, 2.5f, false), new Vector3(0, 1.8f, 0.45f), Vector3.one * 0.45f, new Vector3(90, 0, 0), "runa", false);
@@ -180,7 +225,10 @@ namespace Umbral
                     break;
             }
             Kit.PointLight(root, glow, 5f, 1.8f, new Vector3(0, 2f, 0.5f));
-            Arena.Current.obstacles.Add(new Arena.Obstacle(at, kind == StationKind.Quests ? 1.1f : 1.0f, true));
+            // alfombra rúnica bajo cada estación
+            var rug = Fx.MeshObj("Alfombra", MeshGen.Quad, Mats.Unlit(glow.WithA(0.35f), Mats.Blend.Additive, Tex.Ring, 1.4f, false), at.X0Z(0.04f), Quaternion.Euler(90, 0, 0), Vector3.one * 3.6f);
+            rug.transform.SetParent(root, true);
+            Arena.Current.obstacles.Add(new Arena.Obstacle(at, kind == StationKind.Quests ? 1.0f : 0.9f, true));
             Interactable.Add(root.gameObject, name, open, 2.6f, 3.2f);
         }
 
@@ -188,7 +236,7 @@ namespace Umbral
         {
             var root = Kit.Empty(parent, "LaPuerta", at.X0Z());
             root.rotation = U.LookFlat(-up);
-            var stone = Mats.Toon(new Color(0.3f, 0.26f, 0.4f), null, 1f);
+            var stone = Mats.Toon(new Color(0.2f, 0.17f, 0.28f), null, 1f);
             Kit.Part(root, MeshGen.Cube, stone, new Vector3(2.4f, 2.6f, 0), new Vector3(1f, 5.2f, 1f));
             Kit.Part(root, MeshGen.Cube, stone, new Vector3(-2.4f, 2.6f, 0), new Vector3(1f, 5.2f, 1f));
             Kit.Part(root, MeshGen.Cube, stone, new Vector3(0, 5.5f, 0), new Vector3(6f, 0.8f, 1.1f));
@@ -229,7 +277,10 @@ namespace Umbral
         float check;
         void Start()
         {
-            bubble = Kit.Part(transform, MeshGen.Sphere, Mats.Unlit(new Color(1f, 0.85f, 0.4f), Mats.Blend.Additive, null, 3f, false), new Vector3(0, id == "umr" ? 4.3f : 3f, 0), Vector3.one * 0.3f, default, "burbuja", false);
+            // rombo dorado sobre la cabeza: tiene algo nuevo que decirte
+            float h = id == "umr" ? 3.2f : id == "jenkin" ? 0.8f : id == "wilbur" ? 2.4f : 2f;
+            float top = ArtIA.Has(ArtIA.Personajes, id) ? h * 1.2f + (id == "umr" ? 0.35f : 0f) : h + 0.2f;
+            bubble = Kit.Part(transform, MeshGen.Crystal(4, 0.5f), Mats.Unlit(new Color(1f, 0.82f, 0.35f), Mats.Blend.Additive, null, 1.6f, false), new Vector3(0, top + 0.45f, 0), new Vector3(0.18f, 0.32f, 0.18f), new Vector3(180, 0, 0), "burbuja", false);
             bubble.gameObject.AddComponent<Spin>();
         }
         void Update()

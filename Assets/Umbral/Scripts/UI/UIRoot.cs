@@ -87,6 +87,7 @@ namespace Umbral
             stack.RemoveAt(i);
             onCloseStack.RemoveAt(i);
             if (go != null) Destroy(go);
+            lastCloseFrame = Time.frameCount;
             HitStop.pauseLocks = stack.Count;
             if (stack.Count == 0 && PlayerController.Instance != null) StartCoroutine(UnlockNextFrame());
             cb?.Invoke();
@@ -101,6 +102,7 @@ namespace Umbral
         public void CloseAll() { while (stack.Count > 0) PopScreen(); }
 
         bool cancelReady;
+        int lastCloseFrame = -10;
         void Update()
         {
             Music.Tick();
@@ -116,7 +118,7 @@ namespace Umbral
                 }
                 cancelReady = true;
                 // mantener una selección para el mando
-                if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null && GameInput.UsingGamepad)
+                if (stack.Count > 0 && EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null && GameInput.UsingGamepad)
                 {
                     var sel = stack[stack.Count - 1]?.GetComponentInChildren<Selectable>();
                     if (sel != null) UIKit.Select(sel.gameObject);
@@ -125,6 +127,7 @@ namespace Umbral
             else cancelReady = false;
 
             // menú de pausa / boones
+            if (Time.frameCount <= lastCloseFrame + 1) return;
             if (Game.Instance != null && Game.Instance.state == GameState.Run && stack.Count == 0 && !dialogueActive && PlayerController.Instance != null && PlayerController.Instance.Alive)
             {
                 if (GameInput.Pressed(GameButton.Pause)) OpenPause();

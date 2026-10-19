@@ -63,6 +63,29 @@ namespace Umbral
             return r;
         }
 
+        /// <summary>Rejilla subdividida (para poder doblar la figura) con x en [-0.5, 0.5] e y en [0, 1].</summary>
+        static Mesh GridMesh(string name, float u0, float u1, float v0, float v1, int cols = 4, int rows = 10)
+        {
+            var verts = new List<Vector3>(); var uvs = new List<Vector2>(); var tris = new List<int>();
+            for (int y = 0; y <= rows; y++)
+                for (int x = 0; x <= cols; x++)
+                {
+                    float fx = (float)x / cols, fy = (float)y / rows;
+                    verts.Add(new Vector3(fx - 0.5f, fy, 0));
+                    uvs.Add(new Vector2(Mathf.Lerp(u0, u1, fx), Mathf.Lerp(v0, v1, fy)));
+                }
+            for (int y = 0; y < rows; y++)
+                for (int x = 0; x < cols; x++)
+                {
+                    int i = y * (cols + 1) + x;
+                    tris.AddRange(new[] { i, i + cols + 1, i + 1, i + 1, i + cols + 1, i + cols + 2 });
+                }
+            var m = new Mesh { name = name };
+            m.SetVertices(verts); m.SetUVs(0, uvs); m.SetTriangles(tris, 0);
+            m.bounds = new Bounds(new Vector3(0, 0.5f, 0), new Vector3(2.5f, 2f, 1f));
+            return m;
+        }
+
         /// <summary>
         /// Si hay una imagen de personaje para este id, construye una figura pintada frente a la cámara
         /// (como los sprites de Hades) con el mismo esqueleto de animación que el arte procedural.
@@ -77,14 +100,9 @@ namespace Umbral
             float aspect = (float)r.width / Mathf.Max(1, r.height);
             float h = height * 1.2f;
 
-            var mesh = new Mesh { name = "sprite_" + id };
             float u0 = (float)r.x / t.width, u1 = (float)(r.x + r.width) / t.width;
             float v0 = (float)r.y / t.height, v1 = (float)(r.y + r.height) / t.height;
-            mesh.vertices = new[] { new Vector3(-0.5f, 0, 0), new Vector3(0.5f, 0, 0), new Vector3(0.5f, 1, 0), new Vector3(-0.5f, 1, 0) };
-            mesh.uv = new[] { new Vector2(u0, v0), new Vector2(u1, v0), new Vector2(u1, v1), new Vector2(u0, v1) };
-            mesh.triangles = new[] { 0, 2, 1, 0, 3, 2 };
-            mesh.RecalculateBounds();
-
+            var mesh = GridMesh("sprite_" + id, u0, u1, v0, v1);
             if (!spriteMats.TryGetValue(id, out var mat) || mat == null)
             {
                 mat = new Material(Shader.Find("Umbral/Sprite")) { name = "Sprite_" + id };
@@ -101,8 +119,11 @@ namespace Umbral
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             holder.gameObject.AddComponent<FaceCamera>();
             rig.weaponPivot = Kit.Empty(body, "WeaponPivot", Vector3.zero);
-            rig.bobAmount = 0.05f;
-            rig.leanAmount = 4f;
+            rig.bobAmount = 0f;
+            rig.spriteMode = true;
+            var anim = go.AddComponent<SpriteAnimator>();
+            anim.Setup(rig, mr, SpriteAnimator.ProfileFor(id), t);
+            if (anim.profile.flies) { rig.floats = true; rig.floatHeight = anim.profile.flyHeight; }
             rig.Init();
             return rig;
         }
