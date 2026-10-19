@@ -6,10 +6,11 @@ Eres **Sothis Whateley** (hijo o hija, a elegir), el tercer vástago de Lavinia 
 
 | | |
 |---|---|
-| ![Menú](docs/capturas/01_menu.png) | ![Bosque Encantado](docs/capturas/20_region0_sala.png) |
+| ![Menú](docs/capturas/01_menu.png) | ![Diálogo](docs/capturas/02_dialogo.png) |
+| ![Bosque Encantado](docs/capturas/20_region0_sala.png) | ![El Umbral](docs/capturas/03_santuario.png) |
 | ![Elección de boon](docs/capturas/11_eleccion_boon.png) | ![Pickman](docs/capturas/22_jefe0_intro.png) |
 | ![Dagón e Hidra](docs/capturas/23_jefe1_combate.png) | ![Sumo Sacerdote](docs/capturas/23_jefe2_combate.png) |
-| ![Nyarlathotep](docs/capturas/24_jefe3_fase.png) | ![El Umbral](docs/capturas/03_santuario.png) |
+| ![Nyarlathotep](docs/capturas/24_jefe3_fase.png) | |
 
 ---
 

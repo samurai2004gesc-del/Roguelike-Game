@@ -68,14 +68,17 @@ namespace Umbral.EditorTools
         {
             int w = tex.width, h = tex.height;
             var px = tex.GetPixels();
-            // color de fondo = media de las cuatro esquinas
-            Color bg = (px[0] + px[w - 1] + px[(h - 1) * w] + px[h * w - 1]) / 4f;
+            Color bg = BorderMode(px, w, h);
             const float tol = 0.32f;
             var removed = new bool[w * h];
             var q = new Queue<int>();
             void Seed(int x, int y) { int i = y * w + x; if (!removed[i] && Dist(px[i], bg) < tol) { removed[i] = true; q.Enqueue(i); } }
             for (int x = 0; x < w; x++) { Seed(x, 0); Seed(x, h - 1); }
             for (int y = 0; y < h; y++) { Seed(0, y); Seed(w - 1, y); }
+            // huecos cerrados (entre alas, brazos...): el color casi exacto del fondo también se elimina
+            var key = new Color(1f, 0f, 1f);
+            for (int i = 0; i < px.Length; i++)
+                if (!removed[i] && (Dist(px[i], bg) < 0.2f || Dist(px[i], key) < 0.3f)) { removed[i] = true; q.Enqueue(i); }
             while (q.Count > 0)
             {
                 int i = q.Dequeue();
@@ -101,6 +104,23 @@ namespace Umbral.EditorTools
             }
             tex.SetPixels(px);
             tex.Apply(true);
+        }
+
+        /// <summary>Color de fondo = el más frecuente del borde de la imagen (aunque la figura toque los bordes).</summary>
+        static Color BorderMode(Color[] px, int w, int h)
+        {
+            var buckets = new Dictionary<int, (int n, Color sum)>();
+            void Add(Color c)
+            {
+                int k = (Mathf.RoundToInt(c.r * 15) << 8) | (Mathf.RoundToInt(c.g * 15) << 4) | Mathf.RoundToInt(c.b * 15);
+                buckets.TryGetValue(k, out var e);
+                buckets[k] = (e.n + 1, e.sum + c);
+            }
+            for (int x = 0; x < w; x += 2) { Add(px[x]); Add(px[(h - 1) * w + x]); }
+            for (int y = 0; y < h; y += 2) { Add(px[y * w]); Add(px[y * w + w - 1]); }
+            var best = default((int n, Color sum));
+            foreach (var e in buckets.Values) if (e.n > best.n) best = e;
+            return best.n > 0 ? best.sum / best.n : Color.magenta;
         }
 
         static float Dist(Color a, Color b)
@@ -139,6 +159,13 @@ namespace Umbral.EditorTools
                 RenderTexture.active = prev; RenderTexture.ReleaseTemporary(rt);
                 float corner = probe.GetPixel(3, 3).a, center = probe.GetPixel(t.width / 2, (int)(t.height * 0.6f)).a;
                 Debug.Log($"[ArtIA] {path} -> {t.format} {t.width}x{t.height} alfa esquina={corner:F2} centro={center:F2}");
+                var dump = System.Environment.GetEnvironmentVariable("UMBRAL_ART_DUMP");
+                if (!string.IsNullOrEmpty(dump) && !path.Contains("/fondos/") && !path.Contains("/suelos/"))
+                {
+                    System.IO.Directory.CreateDirectory(dump);
+                    var folder = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path));
+                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(dump, folder + "_" + System.IO.Path.GetFileNameWithoutExtension(path) + ".png"), probe.EncodeToPNG());
+                }
             }
             EditorApplication.Exit(0);
         }

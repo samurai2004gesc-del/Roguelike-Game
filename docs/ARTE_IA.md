@@ -2,6 +2,13 @@
 
 El juego trae arte generado por código, pero **cualquier imagen que pongas en `Assets/Umbral/Resources/ArtIA/` lo sustituye automáticamente**. No hace falta tocar código. Puedes ir poco a poco: lo que falte se sigue viendo con el arte procedural.
 
+## Estado actual
+
+Ya están incluidas 82 imágenes (todos los iconos, fondos y figuras, y casi todos los retratos). Faltan, y siguen con arte procedural:
+- `retratos/cthugha`
+- `suelos/azathoth`
+- `personajes/shoggoth_blob` (la masa pequeña de shoggoth)
+
 ## Cómo hacerlo
 
 1. Abre Gemini y elige el modelo de imágenes **Nano Banana Pro**.
